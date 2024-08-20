@@ -1,0 +1,12 @@
+DeviceLogonEvents
+| where Timestamp > ago(90d)
+| project DeviceName, ActionType, LogonType, AdditionalFields, InitiatingProcessCommandLine, AccountName, IsLocalAdmin
+| where ActionType == "LogonSuccess"
+| where LogonType in ("Interactive","RemoteInteractive")
+| where IsLocalAdmin == true
+| where InitiatingProcessCommandLine == "lsass.exe"
+| summarize
+['Local Admin Distinct User Count']=dcountif(AccountName,IsLocalAdmin == "true"),
+['Local Admin User List']=make_set_if(AccountName, IsLocalAdmin == "true")
+by DeviceName
+| sort by ['Local Admin Distinct User Count'] desc
